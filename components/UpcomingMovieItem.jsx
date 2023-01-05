@@ -22,7 +22,6 @@ export default function UpcomingMovieItem({ movie }) {
 
 const MovieWrapper = styled.TouchableOpacity`
   flex-direction: row;
-  flex: 1;
   padding: 0 20px;
 `;
 
