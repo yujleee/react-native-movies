@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { View, ActivityIndicator, FlatList } from 'react-native';
+import { View, ActivityIndicator, FlatList, Alert } from 'react-native';
 import styled from '@emotion/native';
 import Swiper from 'react-native-swiper';
 import MovieInfoSlide from '../components/MovieInfoSlide';
 import TopMovieItem from '../components/TopMovieItem';
 import UpcomingMovieItem from '../components/UpcomingMovieItem';
-import { useQuery, useQueryClient } from 'react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from 'react-query';
 import { getNowPlayings, getTopRatedMovies, getUpcomingMovies } from '../api';
 
 export default function Movies() {
@@ -14,7 +14,18 @@ export default function Movies() {
 
   const { data: nowPlayingData, isLoading: isLoadingNP } = useQuery(['Movies', 'NowPlaying'], getNowPlayings);
   const { data: topRatedData, isLoading: isLoadingTR } = useQuery(['Movies', 'TopRated'], getTopRatedMovies);
-  const { data: upcomingData, isLoading: isLoadingUC } = useQuery(['Movies', 'Upcoming'], getUpcomingMovies);
+  const {
+    data: upcomingData,
+    isLoading: isLoadingUC,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(['Movies', 'Upcoming'], getUpcomingMovies, {
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+    },
+  });
 
   // 새로고침 시
   const onRefresh = async () => {
@@ -27,6 +38,13 @@ export default function Movies() {
   // 하나라도 로딩중이면 로딩창
   const isLoading = isLoadingNP || isLoadingTR || isLoadingUC;
 
+  // UpcomingMovies 무한스크롤 fetch
+  const fetchMoreUpcoming = async () => {
+    if (hasNextPage) {
+      await fetchNextPage();
+    }
+  };
+
   // 로딩에 여부에 따라서 로더 보여줌
   if (isLoading) {
     return (
@@ -38,6 +56,8 @@ export default function Movies() {
 
   return (
     <FlatList
+      onEndReached={fetchMoreUpcoming}
+      onEndReachedThreshold={0.5}
       refreshing={isRefreshing}
       onRefresh={onRefresh}
       ListHeaderComponent={
@@ -60,7 +80,7 @@ export default function Movies() {
           <Title>UpComing Movies</Title>
         </>
       }
-      data={upcomingData.results}
+      data={upcomingData.pages.map((page) => page.results).flat()}
       renderItem={({ item }) => <UpcomingMovieItem movie={item} />}
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={<View style={{ height: 15 }} />}
