@@ -98,9 +98,9 @@ export default function Login({ navigation: { goBack } }) {
         secureTextEntry={true}
       />
 
-      <LoginButton onPress={onLogin}>
+      <Button onPress={onLogin}>
         <ButtonText>Login</ButtonText>
-      </LoginButton>
+      </Button>
       <TouchableOpacity onPress={onSignup}>
         <Text>Sign up</Text>
       </TouchableOpacity>
@@ -115,10 +115,11 @@ const LoginWrapper = styled.View`
   justify-content: center;
   align-items: center;
   margin: 60px 0;
+  padding: 0 20px;
 `;
 
 const Input = styled.TextInput`
-  width: 300px;
+  width: 100%;
   height: 46px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
@@ -127,16 +128,17 @@ const Input = styled.TextInput`
   padding: 0 16px;
 `;
 
-const LoginButton = styled.TouchableOpacity`
+export const Button = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
-  width: 300px;
+  width: 100%;
   height: 46px;
   border-radius: 4px;
+  margin-top: 10px;
   background-color: ${(props) => props.theme.backgroundColor};
 `;
 
-const ButtonText = styled.Text`
+export const ButtonText = styled.Text`
   color: #fff;
   font-weight: 700;
 `;
@@ -145,7 +147,7 @@ const GoogleText = styled(ButtonText)`
   color: ${(props) => props.theme.backgroundColor};
 `;
 
-const GoogleLoginButton = styled(LoginButton)`
+const GoogleLoginButton = styled(Button)`
   background-color: none;
   border: 1px solid #ccc;
   border-color: ${(props) => props.theme.backgroundColor};
