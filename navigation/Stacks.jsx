@@ -5,6 +5,7 @@ import Detail from '../screen/Detail';
 import { TouchableOpacity, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TITLE_COLOR, TITLE_DARK_COLOR } from '../colors';
+import Login from '../screen/Login';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ export default function Stacks({ navigation: { goBack } }) {
       <Stack.Screen name="Movies" component={Movies} />
       <Stack.Screen name="My" component={My} />
       <Stack.Screen name="Detail" component={Detail} />
+      <Stack.Screen name="Login" component={Login} />
     </Stack.Navigator>
   );
 }
