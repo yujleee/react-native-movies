@@ -23,7 +23,7 @@ const Detail = ({
       reset({
         index: 1,
         routes: [
-          { name: 'Tabs', params: { screen: 'Moives' } },
+          { name: 'Tabs', params: { screen: 'Detail' } },
           { name: 'Stacks', params: { screen: 'Login' } },
         ],
       });
