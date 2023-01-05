@@ -13,12 +13,23 @@ export default function Movies() {
   const queryClient = useQueryClient(); // 캐시메모리 사용을 위한 변수
 
   const { data: nowPlayingData, isLoading: isLoadingNP } = useQuery(['Movies', 'NowPlaying'], getNowPlayings);
-  const { data: topRatedData, isLoading: isLoadingTR } = useQuery(['Movies', 'TopRated'], getTopRatedMovies);
+  const {
+    data: topRatedData,
+    isLoading: isLoadingTR,
+    fetchNextPage: fetchNextPageTR,
+    hasNextPage: HasNextPageTR,
+  } = useInfiniteQuery(['Movies', 'TopRated'], getTopRatedMovies, {
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+    },
+  });
   const {
     data: upcomingData,
     isLoading: isLoadingUC,
-    fetchNextPage,
-    hasNextPage,
+    fetchNextPage: fetchNextPageUC,
+    hasNextPage: hasNextPageUC,
   } = useInfiniteQuery(['Movies', 'Upcoming'], getUpcomingMovies, {
     getNextPageParam: (lastPage) => {
       if (lastPage.page < lastPage.total_pages) {
@@ -40,8 +51,15 @@ export default function Movies() {
 
   // UpcomingMovies 무한스크롤 fetch
   const fetchMoreUpcoming = async () => {
-    if (hasNextPage) {
-      await fetchNextPage();
+    if (hasNextPageUC) {
+      await fetchNextPageUC();
+    }
+  };
+
+  // TopRated 무한스트롤 fetch
+  const fetchMoreTopRated = async () => {
+    if (HasNextPageTR) {
+      await fetchNextPageTR();
     }
   };
 
@@ -69,11 +87,13 @@ export default function Movies() {
           </Swiper>
           <Title>Top Rated Movies</Title>
           <FlatList
+            onEndReached={fetchMoreTopRated}
+            onEndReachedThreshold={0.5}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             ItemSeparatorComponent={<View style={{ width: 10 }} />}
-            data={topRatedData.results}
+            data={topRatedData.pages.map((page) => page.results).flat()}
             renderItem={({ item }) => <TopMovieItem movie={item} />}
             keyExtractor={(item) => item.id}
           />
