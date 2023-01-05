@@ -1,61 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View, ActivityIndicator, FlatList } from 'react-native';
 import styled from '@emotion/native';
 import Swiper from 'react-native-swiper';
 import MovieInfoSlide from '../components/MovieInfoSlide';
 import TopMovieItem from '../components/TopMovieItem';
 import UpcomingMovieItem from '../components/UpcomingMovieItem';
-
-const BASE_URL = 'https://api.themoviedb.org/3/movie';
-const API_KEY = '07a8c1016ba33e1636341cd8ddebd15c';
+import { useQuery, useQueryClient } from 'react-query';
+import { getNowPlayings, getTopRatedMovies, getUpcomingMovies } from '../api';
 
 export default function Movies() {
-  const [nowPlayings, setNowPlayings] = useState([]);
-  const [topLatedMovies, setTopLatedMovies] = useState([]);
-  const [upcomingMovies, setUpcomingMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient(); // 캐시메모리 사용을 위한 변수
 
-  const getNowPlayings = async () => {
-    const { results } = await fetch(`${BASE_URL}/now_playing?api_key=${API_KEY}&language=en-US&page=1`).then((res) =>
-      res.json()
-    );
-
-    setNowPlayings(results);
-  };
-
-  const getTopRatedMovies = async () => {
-    const { results } = await fetch(`${BASE_URL}/top_rated?api_key=${API_KEY}&language=en-US&page=1`).then((res) =>
-      res.json()
-    );
-
-    setTopLatedMovies(results);
-  };
-
-  const getUpcomingMovies = async () => {
-    const { results } = await fetch(`${BASE_URL}/upcoming?api_key=${API_KEY}&language=en-US&page=1`).then((res) =>
-      res.json()
-    );
-
-    setUpcomingMovies(results);
-  };
-
-  // 데이터를 모두 받아왔을 때 로딩이 끝나도록
-  const getData = async () => {
-    await Promise.all([getNowPlayings(), getTopRatedMovies(), getUpcomingMovies()]);
-    setIsLoading(false);
-  };
+  const { data: nowPlayingData, isLoading: isLoadingNP } = useQuery(['Movies', 'NowPlaying'], getNowPlayings);
+  const { data: topRatedData, isLoading: isLoadingTR } = useQuery(['Movies', 'TopRated'], getTopRatedMovies);
+  const { data: upcomingData, isLoading: isLoadingUC } = useQuery(['Movies', 'Upcoming'], getUpcomingMovies);
 
   // 새로고침 시
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await getData();
+    // refetch 부분 필요.
+    await queryClient.refetchQueries(['Movies']);
     setIsRefreshing(false);
   };
 
-  useEffect(() => {
-    getData();
-  }, []);
+  // 하나라도 로딩중이면 로딩창
+  const isLoading = isLoadingNP || isLoadingTR || isLoadingUC;
 
   // 로딩에 여부에 따라서 로더 보여줌
   if (isLoading) {
@@ -73,7 +43,7 @@ export default function Movies() {
       ListHeaderComponent={
         <>
           <Swiper height={'100%'} showsPagination={false} autoplay loop>
-            {nowPlayings.map((movie) => (
+            {nowPlayingData.results.map((movie) => (
               <MovieInfoSlide key={movie.id} movie={movie} />
             ))}
           </Swiper>
@@ -83,14 +53,14 @@ export default function Movies() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             ItemSeparatorComponent={<View style={{ width: 10 }} />}
-            data={topLatedMovies}
+            data={topRatedData.results}
             renderItem={({ item }) => <TopMovieItem movie={item} />}
             keyExtractor={(item) => item.id}
           />
           <Title>UpComing Movies</Title>
         </>
       }
-      data={upcomingMovies}
+      data={upcomingData.results}
       renderItem={({ item }) => <UpcomingMovieItem movie={item} />}
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={<View style={{ height: 15 }} />}
