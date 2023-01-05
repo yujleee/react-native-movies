@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ActivityIndicator, StyleSheet, Image, Linking, View, useColorScheme, FlatList } from 'react-native';
+import { ActivityIndicator, StyleSheet, Image, Linking, View, FlatList, useColorScheme } from 'react-native';
 import styled from '@emotion/native';
-import { AntDesign } from '@expo/vector-icons';
 import { Loader } from './Movies';
 import { getImgPath } from '../util';
 import { SCREEN_HEIGHT } from '../util';
 import VideoItem from '../components/VideoItem';
+import { useQuery } from 'react-query';
+import { getDetail } from '../api';
 
 const Detail = ({
   navigation: { navigate },
@@ -14,30 +15,13 @@ const Detail = ({
     params: { movieId },
   },
 }) => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const isDark = useColorScheme() === 'dark';
-
-  const BASE_URL = 'https://api.themoviedb.org/3/movie';
-  const API_KEY = '07a8c1016ba33e1636341cd8ddebd15c';
-
-  const getDetail = async () => {
-    const response = await fetch(
-      `${BASE_URL}/${movieId}?api_key=${API_KEY}&language=en-US&append_to_response=videos`
-    ).then((res) => res.json());
-
-    setData(response);
-    setIsLoading(false);
-  };
+  const { data, isLoading } = useQuery(['Detail', movieId], getDetail);
 
   const openYoutube = async (key) => {
     const url = `https://www.youtube.com/watch?v=${key}`;
     await Linking.openURL(url);
   };
-
-  useEffect(() => {
-    getDetail();
-  }, []);
 
   if (isLoading) {
     return (
